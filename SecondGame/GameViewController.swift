@@ -38,6 +38,8 @@ class GameViewController: UIViewController {
 	// Collisions
 	private var maxPenetrationDistance = CGFloat(0.0)
 	private var replacementPositions = [SCNNode: SCNVector3]()
+	// Enemies
+	private var golemsPositions = [String: SCNVector3]()
 	// Calculated Variables
 	var characterDirection: float3 {
 		var direction = float3(controllerStoredDirection.x, 0.0, controllerStoredDirection.y)
@@ -64,6 +66,7 @@ class GameViewController: UIViewController {
 		setupCamera()
 		setupLight()
 		setupWallBitmasks()
+		setupEnemies()
 		
 		state = .playing
     }
@@ -174,8 +177,6 @@ class GameViewController: UIViewController {
 			let vClamp = clamp(vMix, min: -1.0, max: 1.0)
 			
 			controllerStoredDirection = vClamp
-			
-			print(controllerStoredDirection)
 		} else if let touch = cameraTouch {
 			let displacement = float2(touch.location(in: view)) - float2(touch.previousLocation(in: view))
 			
@@ -230,11 +231,18 @@ extension GameViewController: SCNSceneRendererDelegate {
 		player?.walk(direction: direction, time: time, scene: scene)
 		
 		updateFollowersPositions()
+		
+		// golems
+		mainScene.rootNode.enumerateChildNodes { (node, _) in
+			if let golem = node as? Golem {
+				golem.update(withTime: time, andScene: scene)
+			}
+		}
 	}
 	
 	//MARK: collisions:
 	private func characterNode(_ node: SCNNode, hitWall wall: SCNNode, withContact contact: SCNPhysicsContact) {
-		if node.name != "collider" { return }
+		if node.name != "collider" && node.name != "golemCollider" { return }
 		
 		if maxPenetrationDistance > contact.penetrationDistance { return }
 		
@@ -248,22 +256,58 @@ extension GameViewController: SCNSceneRendererDelegate {
 		replacementPositions[node.parent!] = SCNVector3(characterPosition)
 	}
 	//MARK: enemies
+	private func setupEnemies() {
+		let enemies = mainScene.rootNode.childNode(withName: "Enemies", recursively: false)!
+		enemies.childNodes.forEach{ golemsPositions[$0.name!] = $0.position }
+		
+		setupGolems()
+	}
+	
+	private func setupGolems() {
+		let golemNames = ["golem1","golem2","golem3"]
+		let golemScale: Float = 0.0083
+		func loadGolem(name: String) -> Golem {
+			let golem = Golem(enemy: player!, view: gameView)
+			golem.scale = SCNVector3(golemScale, golemScale, golemScale)
+			golem.position = golemsPositions[name]!
+			return golem
+		}
+		let golems = golemNames.map{ loadGolem(name: $0) }
+		gameView.prepare(golems) { (finished) in
+			golems.forEach{
+				$0.setupCollider(scale: CGFloat(golemScale))
+				self.mainScene.rootNode.addChildNode($0)
+			}
+		}
+		
+		
+	}
 }
 // physics
 extension GameViewController: SCNPhysicsContactDelegate {
+	private func updatePhsyicsWorld(contact: SCNPhysicsContact) {
+		contact.match(BitmaskWall) { (matching, other) in
+			self.characterNode(other, hitWall: matching, withContact: contact)
+		}
+		
+		contact.match(BitmaskGolem){ (matching, other) in
+			let golem = matching.parent as! Golem
+			if other.name == "collider" { golem.isCollideWithEnemy = true }
+		}
+	}
+	
 	func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
 		if state != .playing { return }
 		
-		contact.match(BitmaskWall) { (matching, other) in
-			self.characterNode(other, hitWall: matching, withContact: contact)
-		}
+		updatePhsyicsWorld(contact: contact)
 	}
 	func physicsWorld(_ world: SCNPhysicsWorld, didUpdate contact: SCNPhysicsContact) {
-		contact.match(BitmaskWall) { (matching, other) in
-			self.characterNode(other, hitWall: matching, withContact: contact)
-		}
+		updatePhsyicsWorld(contact: contact)
 	}
 	func physicsWorld(_ world: SCNPhysicsWorld, didEnd contact: SCNPhysicsContact) {
-		
+		contact.match(BitmaskGolem){ (matching, other) in
+			let golem = matching.parent as! Golem
+			if other.name == "collider" { golem.isCollideWithEnemy = false }
+		}
 	}
 }

@@ -23,6 +23,7 @@ class GameView: SCNView {
 		super.awakeFromNib()
 		
 		setupGUI()
+		setupNotificationObserver()
 	}
 	
 	override func layoutSubviews() {
@@ -31,7 +32,7 @@ class GameView: SCNView {
 	}
 	
 	deinit {
-		
+		NotificationCenter.default.removeObserver(self)
 	}
 	
 	//MARK: Overlay
@@ -91,5 +92,30 @@ class GameView: SCNView {
 		healthBarSprite.position = CGPoint(x: 15, y: bounds.width)
 		(healthBarSprite.xScale, healthBarSprite.yScale) = (1,1)
 		scene.addChild(healthBarSprite)
+	}
+	
+	//MARK: Internal functions
+	private func setupNotificationObserver() {
+		NotificationCenter.default.addObserver(self, selector: #selector(hpDidChange), name: NSNotification.Name("hpChanged"), object: nil)
+	}
+	
+	@objc private func hpDidChange(sender: NSNotification) {
+		guard let data = sender.userInfo as? [String: Any],
+			let maxHp = data["playerMaxHp"] as? CGFloat,
+			let hp = data["currentHp"] as? CGFloat else {
+				return
+		}
+		var width = (healthBarWidth * hp) / maxHp
+		
+		if width < 0 { width = 0 }
+		
+		if width <= healthBarWidth / 3.5 {
+			healthBarSprite.color = .red
+		} else if width <= healthBarWidth / 2 {
+			healthBarSprite.color = .orange
+		}
+		
+		let reduceAction = SKAction.resize(toWidth: width, duration: 0.3)
+		healthBarSprite.run(reduceAction)
 	}
 }

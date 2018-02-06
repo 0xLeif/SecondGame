@@ -16,6 +16,8 @@
 		922495312017B698001BF15D /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 922495302017B698001BF15D /* GameView.swift */; };
 		92B058D0201FF831007E3170 /*  Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B058CF201FF831007E3170 /*  Player.swift */; };
 		92B058D2202033F7007E3170 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B058D1202033F7007E3170 /* Extension.swift */; };
+		92C5E88E2029364200447AF4 /* Golem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5E88D2029364200447AF4 /* Golem.swift */; };
+		92C5E89020293E8C00447AF4 /* GameUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C5E88F20293E8C00447AF4 /* GameUtils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,8 @@
 		922495302017B698001BF15D /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		92B058CF201FF831007E3170 /*  Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = " Player.swift"; sourceTree = "<group>"; };
 		92B058D1202033F7007E3170 /* Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
+		92C5E88D2029364200447AF4 /* Golem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Golem.swift; sourceTree = "<group>"; };
+		92C5E88F20293E8C00447AF4 /* GameUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				92B058D1202033F7007E3170 /* Extension.swift */,
+				92C5E88F20293E8C00447AF4 /* GameUtils.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -88,6 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				92B058CF201FF831007E3170 /*  Player.swift */,
+				92C5E88D2029364200447AF4 /* Golem.swift */,
 			);
 			path = Nodes;
 			sourceTree = "<group>";
@@ -165,6 +171,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				92C5E88E2029364200447AF4 /* Golem.swift in Sources */,
+				92C5E89020293E8C00447AF4 /* GameUtils.swift in Sources */,
 				92B058D2202033F7007E3170 /* Extension.swift in Sources */,
 				9224951F2017B619001BF15D /* GameViewController.swift in Sources */,
 				92B058D0201FF831007E3170 /*  Player.swift in Sources */,
