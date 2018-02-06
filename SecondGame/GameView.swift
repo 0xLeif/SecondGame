@@ -101,11 +101,11 @@ class GameView: SCNView {
 	
 	@objc private func hpDidChange(sender: NSNotification) {
 		guard let data = sender.userInfo as? [String: Any],
-			let maxHp = data["playerMaxHp"] as? CGFloat,
-			let hp = data["currentHp"] as? CGFloat else {
+			let maxHp = data["playerMaxHp"] as? Float,
+			let hp = data["currentHp"] as? Float else {
 				return
 		}
-		var width = (healthBarWidth * hp) / maxHp
+		var width = (healthBarWidth * CGFloat(hp)) / CGFloat(maxHp)
 		
 		if width < 0 { width = 0 }
 		

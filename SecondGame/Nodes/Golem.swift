@@ -10,7 +10,7 @@ import Foundation
 import SceneKit
 
 enum GolemAnimationType {
-	case walk, attack1, dead
+	case walk, attack, dead
 }
 
 class Golem: SCNNode {
@@ -54,8 +54,8 @@ class Golem: SCNNode {
 		super.init()
 		self.enemy = enemy
 		gameView = view
-		
 		setupModelScene()
+		loadAnimations()
 	}
 	
 	required init?(coder aDecoder: NSCoder) {
@@ -78,9 +78,9 @@ class Golem: SCNNode {
 	
 	//MARK: Animations
 	private func loadAnimations() {
-		loadAnimation(state: .walk, inScene: "art.scnassets/Scenes/Enemies/Golem@Flight", withID: "unnamed_Animation__1")
+		loadAnimation(state: .walk, inScene: "art.scnassets/Scenes/Enemies/Golem@Flight", withID: "unnamed_animation__1")
 		
-		loadAnimation(state: .attack1, inScene: "art.scnassets/Scenes/Enemies/Golem@Attack(1)", withID: "Golem@Attack(1)-1")
+		loadAnimation(state: .attack, inScene: "art.scnassets/Scenes/Enemies/Golem@Attack", withID: "Golem@Attack(1)-1")
 		
 		loadAnimation(state: .dead, inScene: "art.scnassets/Scenes/Enemies/Golem@Dead", withID: "Golem@Dead-1")
 	}
@@ -89,7 +89,9 @@ class Golem: SCNNode {
 		let sceneURL = Bundle.main.url(forResource: name, withExtension: "dae")!
 		let sceneSource = SCNSceneSource(url: sceneURL, options: nil)!
 		
-		let animation: CAAnimation = sceneSource.entryWithIdentifier(id, withClass: CAAnimation.self)!
+		guard let animation: CAAnimation = sceneSource.entryWithIdentifier(id, withClass: CAAnimation.self) else {
+			return
+		}
 		
 		animation.delegate = self
 		animation.fadeInDuration = 0.2
@@ -104,8 +106,8 @@ class Golem: SCNNode {
 		case .dead:
 			animation.isRemovedOnCompletion = false
 			deadAnimation = animation
-		case .attack1:
-			animation.setValue("attack1", forKey: "animationID")
+		case .attack:
+			animation.setValue("attack", forKey: "animationID")
 			attackAnimation = animation
 		}
 	}
@@ -204,7 +206,9 @@ class Golem: SCNNode {
 		
 		DispatchQueue.main.async {
 			self.attackTimer?.invalidate()
-			self.attackTimer = Timer(timeInterval: 0.05, target: self, selector: #selector(self.attackTimerTicked), userInfo: nil, repeats: true)
+			self.attackTimer = Timer.scheduledTimer(timeInterval: 0.05, target: self, selector: #selector(self.attackTimerTicked), userInfo: nil, repeats: true)
+			
+			self.characterNode.addAnimation(self.attackAnimation, forKey: "attack")
 		}
 	}
 	@objc private func attackTimerTicked() {
