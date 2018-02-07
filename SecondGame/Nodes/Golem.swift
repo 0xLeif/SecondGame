@@ -34,6 +34,9 @@ class Golem: SCNNode {
 	private var lastAttackTime: TimeInterval = 0
 	private var attackTimer: Timer?
 	private var attackFrameCounter = 0
+	// battle
+	private var hpPoints: Float = 70
+	private var isDead = false
 
 	private var isWalking: Bool = false {
 		didSet {
@@ -113,7 +116,7 @@ class Golem: SCNNode {
 	}
 	//MARK: movement
 	func update(withTime time: TimeInterval, andScene scene: SCNScene) {
-		guard let enemy = enemy, !enemy.isDead else { return }
+		guard let enemy = enemy, !enemy.isDead, !isDead else { return }
 		
 		//delta time
 		if previousUpdateTime == 0 { previousUpdateTime = time }
@@ -200,7 +203,7 @@ class Golem: SCNNode {
 	
 	//MARK: battle
 	private func attack() {
-		if isAttacking { return }
+		if isAttacking || isDead { return }
 		
 		isAttacking = true
 		
@@ -219,6 +222,26 @@ class Golem: SCNNode {
 				enemy.gotHit(forDMG: 15)
 			}
 		}
+	}
+	
+	func getHit(byNode node: SCNNode, withDMG dmg: Float) {
+		hpPoints -= dmg
+		
+		if hpPoints <= 0 {
+			die()
+		}
+	}
+	private func die() {
+		isDead = true
+		addAnimation(deadAnimation, forKey: "dead")
+		let wait = SCNAction.wait(duration: 3)
+		let remove = SCNAction.run { (node) in
+			self.removeAllAnimations()
+			self.removeAllActions()
+			self.removeFromParentNode()
+		}
+		let seq = SCNAction.sequence([wait, remove])
+		runAction(seq)
 	}
 }
 //MARK: extension

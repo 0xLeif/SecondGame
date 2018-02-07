@@ -108,6 +108,7 @@ class GameViewController: UIViewController {
 		mainScene.rootNode.addChildNode(player!)
 		
 		player!.setupCollider(withScale: 0.0026)
+		player!.setupWeaponCollider(withScale: 0.0026)
 	}
 	//MARK: Walls
 	private func setupWallBitmasks() {
@@ -162,6 +163,8 @@ class GameViewController: UIViewController {
 					padTouch = touch
 					controllerStoredDirection = float2(0.0)
 				}
+			} else if gameView.virtualAttackButtonBounds().contains(touch.location(in: gameView)) {
+				player?.attack()
 			} else if cameraTouch == nil {
 				cameraTouch = touches.first
 			}
@@ -293,6 +296,7 @@ extension GameViewController: SCNPhysicsContactDelegate {
 		contact.match(BitmaskGolem){ (matching, other) in
 			let golem = matching.parent as! Golem
 			if other.name == "collider" { golem.isCollideWithEnemy = true }
+			if other.name == "weaponCollider" { player!.weaponCollide(withNode: golem) }
 		}
 	}
 	
@@ -308,6 +312,7 @@ extension GameViewController: SCNPhysicsContactDelegate {
 		contact.match(BitmaskGolem){ (matching, other) in
 			let golem = matching.parent as! Golem
 			if other.name == "collider" { golem.isCollideWithEnemy = false }
+			if other.name == "weaponCollider" { player!.weaponUnCollide(withNode: golem) }
 		}
 	}
 }

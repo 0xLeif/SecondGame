@@ -21,6 +21,7 @@ class Player: SCNNode {
 	private var daeHelperNode = SCNNode()
 	private var characterNode: SCNNode!
 	private var collider: SCNNode!
+	private var weaponCollider: SCNNode!
 	
 	//animation
 	private var walkAnimation = CAAnimation()
@@ -48,10 +49,14 @@ class Player: SCNNode {
 	}
 	//collisions
 	var replacementPosition: SCNVector3 = SCNVector3Zero
+	private var activeWeaponCollideNodes = Set<SCNNode>()
 	//battle
 	var isDead = false
 	private let maxHpPoints: Float = 100
 	private var hpPoints: Float = 100
+	var isAttacking = false
+	private var attackTimer: Timer?
+	private var attackFrameCounter = 0
 	
 	//MARK: init
 	override init() {
@@ -108,13 +113,13 @@ class Player: SCNNode {
 				animation.isRemovedOnCompletion = false
 				deadAnimation = animation
 			case .attack:
-				animation.setValue("attack1", forKey: "animationID")
+				animation.setValue("attack", forKey: "animationID")
 				attackAnimation = animation
 		}
 	}
 	//MARK: Movement
 	func walk(direction: float3, time: TimeInterval, scene: SCNScene) {
-		if isDead { return }
+		if isDead || isAttacking { return }
 		
 		if previousUpdateTime == 0.0 { previousUpdateTime = time }
 		
@@ -175,6 +180,14 @@ class Player: SCNNode {
 		addChildNode(collider)
 	}
 	
+	func weaponCollide(withNode node: SCNNode) {
+		activeWeaponCollideNodes.insert(node)
+	}
+	
+	func weaponUnCollide(withNode node: SCNNode) {
+		activeWeaponCollideNodes.remove(node)
+	}
+	
 	//MARK: battle
 	func gotHit(forDMG dmg: Float) {
 		hpPoints -= dmg
@@ -191,10 +204,54 @@ class Player: SCNNode {
 		characterNode.removeAllAnimations()
 		characterNode.addAnimation(deadAnimation, forKey: "dead")
 	}
+	
+	func attack() {
+		if isAttacking || isDead { return }
+		
+		isAttacking = true
+		isWalking = false
+		
+		attackTimer = Timer.scheduledTimer(timeInterval: 0.05, target: self, selector: #selector(attackTimerTicked), userInfo: nil, repeats: true)
+		
+		characterNode.removeAllAnimations()
+		characterNode.addAnimation(attackAnimation, forKey: "attack")
+	}
+	
+	@objc private func attackTimerTicked(sender: Timer) {
+		attackFrameCounter += 1
+		
+		if attackFrameCounter == 12 {
+			activeWeaponCollideNodes.flatMap{ $0 as? Golem }.forEach{ $0.getHit(byNode: self, withDMG: 30)}
+		}
+	}
+	
+	//MARK: weapon
+	func setupWeaponCollider(withScale scale: CGFloat) {
+		let box = SCNBox(width: 160, height: 140, length: 160, chamferRadius: 0)
+		weaponCollider = SCNNode(geometry: box)
+		weaponCollider.name = "weaponCollider"
+		weaponCollider.position = SCNVector3(-10, 108.4, 88)
+		weaponCollider.opacity = 0
+		addChildNode(weaponCollider)
+		
+		let geometry = SCNBox(width: 160 * scale, height: 140 * scale, length: 160 * scale, chamferRadius: 0)
+		let physicsShape = SCNPhysicsShape(geometry: geometry, options: nil)
+		weaponCollider.physicsBody = SCNPhysicsBody(type: .kinematic, shape: physicsShape)
+		weaponCollider.physicsBody?.categoryBitMask = BitmaskPlayerWeapon
+		weaponCollider.physicsBody?.contactTestBitMask = BitmaskGolem
+	}
 }
 
 //MARK: Extensions
 
 extension Player: CAAnimationDelegate {
-	
+	func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+		guard let id = anim.value(forKey: "animationID") as? String else { return }
+		
+		if id == "attack" {
+			attackTimer?.invalidate()
+			attackFrameCounter = 0
+			isAttacking = false
+		}
+	}
 }

@@ -12,7 +12,7 @@ import SpriteKit
 class GameView: SCNView {
 	private var skScene: SKScene!
 	private var dpadSprite: SKSpriteNode!
-	private var attackSprite: SKSpriteNode!
+	var attackSprite: SKSpriteNode!
 	private var healthBarSprite: SKSpriteNode!
 	
 	private let healthBarWidth: CGFloat = 150
@@ -67,22 +67,24 @@ class GameView: SCNView {
 	}
 	func virtualDPadBounds() -> CGRect {
 		var virtualDPadBounds = CGRect(x: 10, y: 10, width: 150, height: 150)
-		virtualDPadBounds.origin.y = bounds.size.height - virtualDPadBounds.size.height
+		virtualDPadBounds.origin.y = bounds.height - virtualDPadBounds.height
 		return virtualDPadBounds
 	}
 	//MARK: Attack Button
 	func setupAttackButton(with scene: SKScene) {
 		attackSprite = SKSpriteNode(imageNamed: "art.scnassets/Assets/attack1.png")
-		attackSprite.position = CGPoint(x: bounds.height - 60, y: 50)
+		attackSprite.position = CGPoint(x: bounds.height - 110, y: 50)
 		(attackSprite.xScale, attackSprite.yScale) = (1,1)
+		attackSprite.size = CGSize(width: 60, height: 60)
 		attackSprite.anchorPoint = .zero
 		attackSprite.name = "attack"
-		attackSprite.size = CGSize(width: 60, height: 60)
 		scene.addChild(attackSprite)
 	}
 	func virtualAttackButtonBounds() -> CGRect {
-		var virtualAttackButtonBounds = CGRect(x: bounds.height - 60, y: 50, width: 60, height: 60)
-		virtualAttackButtonBounds.origin.y = bounds.size.height - virtualAttackButtonBounds.size.height
+		var virtualAttackButtonBounds = CGRect(x: bounds.height + 140, y: 50, width: 60, height: 60)
+		virtualAttackButtonBounds.origin.y = bounds.height - virtualAttackButtonBounds.height -
+			virtualAttackButtonBounds.origin.y
+		
 		return virtualAttackButtonBounds
 	}
 	//MARK: Health Bar
