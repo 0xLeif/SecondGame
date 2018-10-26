@@ -62,13 +62,18 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
 		
 		setupScene()
+        setupInitEnvironment()
 		setupPlayer()
 		setupCamera()
 		setupLight()
 		setupWallBitmasks()
 		setupEnemies()
-		
 		state = .playing
+        for _ in (0 ... 10) {
+            
+            createGolem(atPosition: SCNVector3(Int.random(in: -10 ... 10), 0, Int.random(in: -10 ... 10)))
+        }
+        
     }
 	
     override var shouldAutorotate: Bool {
@@ -86,13 +91,83 @@ class GameViewController: UIViewController {
             return .all
         }
     }
+    
+    func environment(forValue value: Float) -> EnvironmentType? {
+//        print("\t\t\(value)")
+        switch value {
+        case 0.21 ... 0.3:
+            return .fence
+        case 0.11 ... 0.2:
+            return .rock
+        case 0 ... 0.1:
+            return .grass
+        default: break
+        }
+        return nil
+    }
+    
+    var map: [Environment] = []
+    var start: Date!
+    var end: Date!
+    private func gen(from: vector_int2, objectCount: Int32 = 10, bound: Int32 = 5) {
+        start = Date()
+        print(start)
+        print("STARTING PERLIN GEN")
+        let perlin = GKPerlinNoiseSource()
+        let perlinNoise = GKNoise(perlin)
+        let perlinMap = GKNoiseMap(perlinNoise)
+        print("DONE CREATING PERLIN MAP")
+        print("STARTING X Z VALUES FROM BOUNDS")
+        for _ in 1 ... objectCount {
+            let xOffset = Int32.random(in: -bound ... bound) + from.x
+            let yOffset = Int32.random(in: -bound ... bound) + from.y
+            let value = perlinMap.value(at: vector_int2(xOffset, yOffset))
+            if let type = environment(forValue: value) {
+                let node = Environment(type: type)
+                node.position = SCNVector3(Int(xOffset), 0, Int(yOffset))
+                map.append(node)
+            }
+        }
+        print("DONE GENERATING NODES")
+        print("SPAWNING NODES")
+        for m in map {
+            mainScene.rootNode.addChildNode(m)
+        }
+        print("DONE SPAWNING NODES")
+        end = Date()
+        print(end.timeIntervalSince1970 - start.timeIntervalSince1970)
+    }
+    
+    private func ranGen() {
+        let bound = 10
+        for _ in (0 ... 10) {
+            for type in EnvironmentType.allCases {
+                let obj = Environment(type: type)
+                obj.position = SCNVector3(Int.random(in: -bound ... bound), 0, Int.random(in: -bound ... bound))
+                mainScene.rootNode.addChildNode(obj)
+            }
+        }
+    }
+    
+    private func setupInitEnvironment() {
+//        var x: CGFloat = 0
+        gen(from: vector_int2(x: 0, y: 0), objectCount: 100)
+     
+//        ranGen()
+//        EnvironmentType.allCases.forEach { (type) in
+//            let obj = Environment(type: type)
+//            obj.position = SCNVector3(x, 0, 1)
+//            mainScene.rootNode.addChildNode(obj)
+//            x += 2.5
+//        }
+    }
 	
 	//MARK: Scene
 	private func setupScene() {
 		gameView.antialiasingMode = .multisampling4X
 		gameView.delegate = self
 		
-		mainScene = SCNScene(named: "art.scnassets/Scenes/Stage1.scn")
+		mainScene = SCNScene(named: "art.scnassets/Scenes/Stage2.scn")
 		mainScene.physicsWorld.contactDelegate = self
 		
 		gameView.scene = mainScene
@@ -260,14 +335,14 @@ extension GameViewController: SCNSceneRendererDelegate {
 	}
 	//MARK: enemies
 	private func setupEnemies() {
-		let enemies = mainScene.rootNode.childNode(withName: "Enemies", recursively: false)!
-		enemies.childNodes.forEach{ golemsPositions[$0.name!] = $0.position }
+//        let enemies = mainScene.rootNode.childNode(withName: "Enemies", recursively: false)!
+//        enemies.childNodes.forEach{ golemsPositions[$0.name!] = $0.position }
 		
-		setupGolems()
+//        setupGolems()
 	}
 	
 	private func setupGolems() {
-		let golemNames = ["golem1","golem2","golem3"]
+		let golemNames = ["golem1","golem2","golem3","golem4"]
 		let golemScale: Float = 0.0083
 		func loadGolem(name: String) -> Golem {
 			let golem = Golem(enemy: player!, view: gameView)
@@ -282,9 +357,17 @@ extension GameViewController: SCNSceneRendererDelegate {
 				self.mainScene.rootNode.addChildNode($0)
 			}
 		}
-		
-		
 	}
+    
+    private func createGolem(atPosition position: SCNVector3) {
+        let golemScale: Float = 0.0083
+        let golem = Golem(enemy: player!, view: gameView)
+        golem.scale = SCNVector3(golemScale, golemScale, golemScale)
+        golem.position = position
+        golem.setupCollider(scale: CGFloat(golemScale))
+        
+        mainScene.rootNode.addChildNode(golem)
+    }
 }
 // physics
 extension GameViewController: SCNPhysicsContactDelegate {

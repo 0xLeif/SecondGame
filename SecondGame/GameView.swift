@@ -73,7 +73,7 @@ class GameView: SCNView {
 	//MARK: Attack Button
 	func setupAttackButton(with scene: SKScene) {
 		attackSprite = SKSpriteNode(imageNamed: "art.scnassets/Assets/attack1.png")
-		attackSprite.position = CGPoint(x: bounds.height - 110, y: 50)
+		attackSprite.position = CGPoint(x: bounds.height - 120, y: 50)
 		(attackSprite.xScale, attackSprite.yScale) = (1,1)
 		attackSprite.size = CGSize(width: 60, height: 60)
 		attackSprite.anchorPoint = .zero
@@ -81,7 +81,7 @@ class GameView: SCNView {
 		scene.addChild(attackSprite)
 	}
 	func virtualAttackButtonBounds() -> CGRect {
-		var virtualAttackButtonBounds = CGRect(x: bounds.height + 140, y: 50, width: 60, height: 60)
+		var virtualAttackButtonBounds = CGRect(x: bounds.height + 160, y: 50, width: 60, height: 60)
 		virtualAttackButtonBounds.origin.y = bounds.height - virtualAttackButtonBounds.height -
 			virtualAttackButtonBounds.origin.y
 		

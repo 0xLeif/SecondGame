@@ -232,6 +232,9 @@ class Golem: SCNNode {
 		}
 	}
 	private func die() {
+        guard !isDead else {
+            return
+        }
 		isDead = true
 		addAnimation(deadAnimation, forKey: "dead")
 		let wait = SCNAction.wait(duration: 3)
